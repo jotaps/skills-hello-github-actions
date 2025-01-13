@@ -1,0 +1,44 @@
+name: Check Markdown links
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: |
+          npm install markdown-link-check
+          
+      - name: Check Markdown links
+        run: |
+          find . -name "*.md" -type f -exec npx markdown-link-check {} \;
+          
+      - name: Check emoji shortcodes
+        run: |
+          echo "Checking for emoji shortcodes in Markdown files..."
+          find . -name "*.md" -type f -exec sh -c '
+            for file do
+              if grep -E ":[a-zA-Z0-9_+-]+:" "$file"; then
+                echo "Found emoji shortcodes in $file"
+              fi
+            done
+          ' sh {} +
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "Link and emoji shortcode check completed"
